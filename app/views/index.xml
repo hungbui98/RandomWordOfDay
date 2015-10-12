@@ -1,0 +1,15 @@
+<Alloy>
+	<Window class="container">
+		<TableView >
+			<TableViewRow>
+				<Label id="label" width="250">Enter a message: </Label>
+			</TableViewRow>
+			<TableViewRow>
+				<TextField id="txtMessage" width="250"></TextField>
+			</TableViewRow>
+			<TableViewRow left="true">
+				<Button onClick="doProcessMessage">Process Message</Button>
+			</TableViewRow>
+		</TableView>
+	</Window>
+</Alloy>
