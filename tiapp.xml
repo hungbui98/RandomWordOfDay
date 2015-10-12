@@ -6,13 +6,13 @@
     <publisher>hung</publisher>
     <url>http://galamatics.com</url>
     <description/>
-    <copyright>2015 by hung</copyright>
+    <copyright>2015 by HTA</copyright>
     <icon>appicon.png</icon>
     <fullscreen>false</fullscreen>
     <navbar-hidden>false</navbar-hidden>
     <analytics>true</analytics>
     <guid>1b9a3f4b-78c4-4a66-9ccc-b0f6d06f2f41</guid>
-    <property name="UserMessage" type="string"></property>
+    <property name="UserMessage" type="string"/>
     <property name="ti.ui.defaultunit" type="string">dp</property>
     <ios>
         <plist>
@@ -48,9 +48,7 @@
         </splash>
         <theme>default</theme>
     </mobileweb>
-    <modules>
-        <module platform="commonjs">ti.cloud</module>
-    </modules>
+    <modules/>
     <deployment-targets>
         <target device="iphone">false</target>
         <target device="ipad">false</target>
