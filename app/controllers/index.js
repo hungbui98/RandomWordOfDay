@@ -1,26 +1,11 @@
-function getIndicesOf(searchStr, str, caseSensitive) {
-	var startIndex = 0,
-	    searchStrLen = searchStr.length;
-	var index,
-	    indices = [];
-	if (!caseSensitive) {
-		str = str.toLowerCase();
-		searchStr = searchStr.toLowerCase();
-	}
-	while (( index = str.indexOf(searchStr, startIndex)) > -1) {
-		indices.push(index);
-		startIndex = index + searchStrLen;
-	}
-	return indices;
-}
 
 function doProcessMessage(e) {
-	alert(Ti.App.Properties.getString("UserMessage"));
+	//alert(Ti.App.Properties.getString("UserMessage"));
 	var msg = $.txtMessage.value;
 	if (msg !== undefined) {
 		msg = msg.trim();
 		if (msg.length <= 0) {
-			alert("Error: Message can't be blank.");
+			alert("Error: Message can't be blank. Try again.");
 			return;
 		}
 		Ti.App.Properties.setString('UserMessage', msg);
@@ -28,89 +13,56 @@ function doProcessMessage(e) {
 		// process word of the day
 		arrWords = msg.split(' ');
 
-		var arrIndices = getIndicesOf("hi", msg, true);
-		alert(arrIndices);
+		var wordOfDay = getWordOfDay();
+		//alert(wordOfDay);
+		
+		if (wordOfDay === undefined || wordOfDay === null)
+		{
+			Ti.API.error('Unable to get word of the day.');
+			return;
+		}
+		
+		wordOfDay = wordOfDay.trim();
+		var count = 0;
+		for (var i = 0; i < arrWords.length; i++){
+			var word = arrWords[i];
+			if (word !== undefined && word !== null && word != ""){
+				word = word.trim();
+				if (word === wordOfDay){
+					count++;
+				}
+			}
+		}
 
-		//for (word in arrWords){
-
-		//}
-
-		getWordOfDay();
+		if (count > 0){
+			alert("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
+		} else {
+			alert("Word of day '" + wordOfDay + "' is not found in your message.");
+		}
 	}
 }
 
-var arrWords = null;
-var xhr = Titanium.Network.createHTTPClient();
-
-xhr.onload = function(e) {
-
-	alert(this.responseText);
-	// this is where you would process the returned object.
-	if (this.responseText != null) {
-
-		var jsObj = JSON.parse(this.responseText);
-		// Do something with the object
-	} else {
-		alert("Webservice returned nothing");
-	}
-};
-
-xhr.onerror = function(e) {
-	// This is where you would catch any errors thrown from calling the webservice.
-	// e.error holds the error message
-	alert("ERROR: " + e.error);
-};
-
 function getWordOfDay() {
-	//var wsURL = "http://maps.google.com/maps/api/geocode/json?address=";
 	var wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
-	//xhr.open('GET', wsURL);
-	//xhr.setRequestHeader('Content-Type', "application/json; charset=utf-8");
-	//xhr.send();
+	
+	var xhr1 = new XMLHttpRequest();
 
-	 var jqxhr = $.getJSON( wsURL, function() {
-	 console.log( "success" );
-	 })
-	 .done(function() {
-	 console.log( "second success" );
-	 alert("this.responseText: " + this.responseText);
-	 var json = JSON.parse(this.responseText);
-	 if (json.word === undefined) {
-	 alert('Unable to get word of the day.');
-	 return;
-	 }
-	 })
-	 .fail(function(e) {
-	 console.log( "error" );
-	 Ti.API.error(e.error);
-	 alert("ERROR1: " + e.error);
-	 })
-	 .always(function() {
-	 console.log( "complete" );
-	 });
-
-/*
-	var xhr1 = Titanium.Network.createHTTPClient();
-	xhr1.open('GET', wsURL);
-
-	xhr1.onload = function() {
-
-		alert("this.responseText: " + this.responseText);
-		var json = JSON.parse(this.responseText);
+	xhr1.open("GET", wsURL, false);
+	xhr1.send(null);
+	
+	if (xhr1.status === 200) {
+		//alert("xhr1.responseText: " + xhr1.responseText);
+		var json = JSON.parse(xhr1.responseText);
 		if (json.word === undefined) {
-			alert('Unable to get word of the day.');
-			return;
+			//alert('Unable to get word of the day.');
+			return null;
 		}
-
-	};
-	xhr1.onerror = function(e) {
-		Ti.API.error(e.error);
-		alert("ERROR1: " + e.error);
-	};
-
-	xhr1.send();
-*/
-
+		return json.word;
+	} else {
+		//Ti.API.error(xhr1.status);
+	}
+	
+	return null;
 }
 
 function initValues() {
@@ -121,6 +73,8 @@ function initValues() {
 initValues();
 $.index.open();
 
+/*
 var window = {}; var document = { getElementById: function(){}, createComment: function(){}, documentElement: { insertBefore: function(){}, removeChild: function(){} }, createElement: function(elm){ return obj = { innerHTML: '', appendChild: function(){}, getElementsByTagName: function(){ return {}; }, style: {} },
 }
-}; var navigator = { userAgent: "" }; var location = { href: '' };
+}; var navigator = { userAgent: "" }; var location = { href: '' };*/
+
