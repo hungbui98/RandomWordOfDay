@@ -12,7 +12,11 @@
     <navbar-hidden>false</navbar-hidden>
     <analytics>true</analytics>
     <guid>1b9a3f4b-78c4-4a66-9ccc-b0f6d06f2f41</guid>
+    
     <property name="UserMessage" type="string"/>
+    <property name="WordOfDay" type="string"/>
+    <property name="MessageDate" type="string"/>
+    
     <property name="ti.ui.defaultunit" type="string">dp</property>
     <ios>
         <plist>

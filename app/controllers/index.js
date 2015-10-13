@@ -1,6 +1,10 @@
+// global variables.
+var g_wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
+var g_userMessage = undefined;
 
 function doProcessMessage(e) {
-	//alert(Ti.App.Properties.getString("UserMessage"));
+	alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
+	
 	var msg = $.txtMessage.value;
 	if (msg !== undefined) {
 		msg = msg.trim();
@@ -8,6 +12,13 @@ function doProcessMessage(e) {
 			alert("Error: Message can't be blank. Try again.");
 			return;
 		}
+		if (msg === g_userMessage) {
+			alert("Please enter a new message.");
+			return;
+		}
+		
+		// save temp value.
+		g_userMessage = msg;
 		Ti.App.Properties.setString('UserMessage', msg);
 
 		// process word of the day
@@ -43,11 +54,33 @@ function doProcessMessage(e) {
 }
 
 function getWordOfDay() {
-	var wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
+	
+	var msgDate = undefined;
+	var wordOfDay = undefined;
+	var today = new Date();
+	
+	msgDate = Ti.App.Properties.getString("MessageDate");
+	wordOfDay = Ti.App.Properties.getString("WordOfDay");
+	
+	if (msgDate !== undefined && msgDate !== "" && wordOfDay !== undefined && wordOfDay !== ""){
+		try{
+			var d = new Date(msgDate);
+			alert("d = " + d);
+			if (d !== undefined && d.getYear() === today.getYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate() ){
+				// return saved word of day.
+				return wordOfDay;
+			}
+		}
+		catch (e) {
+			alert("exception: " + e);
+		}
+	}
+	
+	// get word of day from web service.
 	
 	var xhr1 = new XMLHttpRequest();
 
-	xhr1.open("GET", wsURL, false);
+	xhr1.open("GET", g_wsURL, false);
 	xhr1.send(null);
 	
 	if (xhr1.status === 200) {
@@ -57,7 +90,12 @@ function getWordOfDay() {
 			//alert('Unable to get word of the day.');
 			return null;
 		}
-		return json.word;
+
+		wordOfDay = json.word.trim();
+		Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
+		Ti.App.Properties.setString('WordOfDay', wordOfDay);
+		
+		return wordOfDay;
 	} else {
 		//Ti.API.error(xhr1.status);
 	}
@@ -73,8 +111,4 @@ function initValues() {
 initValues();
 $.index.open();
 
-/*
-var window = {}; var document = { getElementById: function(){}, createComment: function(){}, documentElement: { insertBefore: function(){}, removeChild: function(){} }, createElement: function(elm){ return obj = { innerHTML: '', appendChild: function(){}, getElementsByTagName: function(){ return {}; }, style: {} },
-}
-}; var navigator = { userAgent: "" }; var location = { href: '' };*/
 
