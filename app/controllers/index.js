@@ -46,10 +46,12 @@ function doProcessMessage(e) {
 		}
 
 		if (count > 0){
+		   	Ti.Media.vibrate({ pattern: [0,500,100,500,100,500] });
 			alert("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
 		} else {
 			alert("Word of day '" + wordOfDay + "' is not found in your message.");
 		}
+		showDialog();
 	}
 }
 
@@ -107,8 +109,15 @@ function initValues() {
 	//alert(Ti.App.Properties.getString("UserMessage"));
 	$.txtMessage.value = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
 }
+function showDialog(){
+    $.dialog.show();
+};
+function hideDialog(){
+    $.dialog.hide();
+};
 
-initValues();
 $.index.open();
+initValues();
+doProcessMessage(null);
 
 
