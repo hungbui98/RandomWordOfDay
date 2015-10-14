@@ -1,9 +1,10 @@
 // global variables.
+var g_iOS = Ti.Platform.name === "iPhone OS";
 var g_wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
 var g_userMessage = undefined;
 
 function doProcessMessage(e) {
-	alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
+	//alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
 	
 	var msg = $.txtMessage.value;
 	if (msg !== undefined) {
@@ -47,11 +48,15 @@ function doProcessMessage(e) {
 
 		if (count > 0){
 		   	Ti.Media.vibrate({ pattern: [0,500,100,500,100,500] });
-			alert("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
+			//alert("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
 		} else {
-			alert("Word of day '" + wordOfDay + "' is not found in your message.");
+			//alert("Word of day '" + wordOfDay + "' is not found in your message.");
 		}
-		showDialog();
+		if (g_iOS){
+			$.tab1.badge = count;
+		} else {
+			$.tab1.title = "Count word of the day: " + count;
+		}
 	}
 }
 
@@ -67,14 +72,14 @@ function getWordOfDay() {
 	if (msgDate !== undefined && msgDate !== "" && wordOfDay !== undefined && wordOfDay !== ""){
 		try{
 			var d = new Date(msgDate);
-			alert("d = " + d);
+			//alert("d = " + d);
 			if (d !== undefined && d.getYear() === today.getYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate() ){
 				// return saved word of day.
 				return wordOfDay;
 			}
 		}
 		catch (e) {
-			alert("exception: " + e);
+			Ti.API.error("Exception: " + e);
 		}
 	}
 	
@@ -109,12 +114,6 @@ function initValues() {
 	//alert(Ti.App.Properties.getString("UserMessage"));
 	$.txtMessage.value = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
 }
-function showDialog(){
-    $.dialog.show();
-};
-function hideDialog(){
-    $.dialog.hide();
-};
 
 $.index.open();
 initValues();
