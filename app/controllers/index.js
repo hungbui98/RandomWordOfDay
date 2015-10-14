@@ -1,21 +1,30 @@
+//----------------------------------
 // global variables.
+//----------------------------------
 var g_iOS = Ti.Platform.name === "iPhone OS";
 var g_wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
 var g_userMessage = undefined;
 
 // key pressed event handler
 function processKeyPressed(e){
+	var msg = $.txtMessage.value;
+	if (msg !== undefined) {
+		Ti.App.Properties.setString('UserMessage', msg);
+	}
  	if (e.keyCode === KeyEvent.KEYCODE_SPACE){
  		doProcessMessage(e);
  	}	
 }
 
+//----------------------------------
 // process user message
+//----------------------------------
 function doProcessMessage(e) {
 	
 	 Ti.API.trace("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
 	
 	var msg = $.txtMessage.value;
+	
 	if (msg !== undefined) {
 		if (e !== undefined && msg.length <= 0) {
 			alert("Error: Message can't be blank. Try again.");
@@ -25,7 +34,6 @@ function doProcessMessage(e) {
 			alert("Please enter a new message.");
 			return;
 		}
-		//msg = msg.trim();
 		
 		// save temp value.
 		g_userMessage = msg;
@@ -35,7 +43,7 @@ function doProcessMessage(e) {
 		arrWords = msg.split(' ');
 		
 		var wordOfDay = getWordOfDay();
-		  Ti.API.trace(wordOfDay);
+		Ti.API.trace(wordOfDay);
 		
 		if (wordOfDay === undefined || wordOfDay === null)
 		{
@@ -51,7 +59,7 @@ function doProcessMessage(e) {
 				word = word.trim();
 				if (word === wordOfDay){
 					// doesn't count if word of day is at last and the last character is not a space
-					if (!(i === arrWords.length-1  && msg[msg.length-1] !== '')){
+					if (!(i === arrWords.length-1  && msg[msg.length-1] !== ' ')){
 						count++;
 					}
 				}
@@ -72,7 +80,9 @@ function doProcessMessage(e) {
 	}
 }
 
+//----------------------------------
 // retreive word of day
+//----------------------------------
 function getWordOfDay() {
 	
 	var msgDate = undefined;
@@ -104,9 +114,9 @@ function getWordOfDay() {
 	xhr1.send(null);
 	
 	if (xhr1.status === 200) {
-		  Ti.API.trace("xhr1.responseText: " + xhr1.responseText);
+		  Ti.API.info("xhr1.responseText = " + xhr1.responseText);
 		var json = JSON.parse(xhr1.responseText);
-		if (json.word === undefined) {
+		if (json.word === undefined || json.word === null) {
 			  Ti.API.trace('Unable to get word of the day.');
 			return null;
 		}
@@ -123,12 +133,17 @@ function getWordOfDay() {
 	return null;
 }
 
-// init values
+//----------------------------------
+// initialize values
+//----------------------------------
 function initValues() {
   	Ti.API.trace(Ti.App.Properties.getString("UserMessage"));
 	$.txtMessage.value = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
 }
 
+//----------------------------------
+// initial code
+//----------------------------------
 $.index.open();
 initValues();
 doProcessMessage();
