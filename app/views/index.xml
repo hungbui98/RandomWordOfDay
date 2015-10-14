@@ -1,6 +1,6 @@
 <Alloy>
 <TabGroup backgroundColor="white" >
-    <Tab id="tab1" title="Count word of the day" badge="0" backgroundColor="orange" icon="Modify-50.png">
+    <Tab id="tab1" title="Word of the day count" badge="0" backgroundColor="orange" icon="Modify-50.png">
     	
 		<Window id="MainWindow" class="container">
 			<TableView >
@@ -8,23 +8,13 @@
 					<Label id="label" width="250">Enter a message: </Label>
 				</TableViewRow>
 				<TableViewRow>
-					<TextField id="txtMessage" width="250"></TextField>
+					<TextField id="txtMessage" width="250" onKeypressed="processKeyPressed"></TextField>
 				</TableViewRow>
 				<TableViewRow left="true">
 					<Button onClick="doProcessMessage">Process Message</Button>
 				</TableViewRow>
 			</TableView>
 	
-		    <AlertDialog id="dialog" title="Word"
-		        message="Number of word found: "  cancel="0">
-		        <Images>
-					<ImageView image="Modify-50.png" width="20" height="20"></ImageView>
-				</Images>
-		        <!-- The ButtonNames tag sets the buttonNames property. -->
-		        <ButtonNames>
-		            <ButtonName>OK</ButtonName>
-		        </ButtonNames>
-		    </AlertDialog>
 		</Window>
 
     </Tab>

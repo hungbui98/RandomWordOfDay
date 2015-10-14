@@ -3,20 +3,29 @@ var g_iOS = Ti.Platform.name === "iPhone OS";
 var g_wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
 var g_userMessage = undefined;
 
+// key pressed event handler
+function processKeyPressed(e){
+ 	if (e.keyCode === KeyEvent.KEYCODE_SPACE){
+ 		doProcessMessage(e);
+ 	}	
+}
+
+// process user message
 function doProcessMessage(e) {
-	//alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
+	
+	 Ti.API.trace("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
 	
 	var msg = $.txtMessage.value;
 	if (msg !== undefined) {
-		msg = msg.trim();
-		if (msg.length <= 0) {
+		if (e !== undefined && msg.length <= 0) {
 			alert("Error: Message can't be blank. Try again.");
 			return;
 		}
-		if (msg === g_userMessage) {
+		if (e !== undefined && msg === g_userMessage) {
 			alert("Please enter a new message.");
 			return;
 		}
+		//msg = msg.trim();
 		
 		// save temp value.
 		g_userMessage = msg;
@@ -24,9 +33,9 @@ function doProcessMessage(e) {
 
 		// process word of the day
 		arrWords = msg.split(' ');
-
+		
 		var wordOfDay = getWordOfDay();
-		//alert(wordOfDay);
+		  Ti.API.trace(wordOfDay);
 		
 		if (wordOfDay === undefined || wordOfDay === null)
 		{
@@ -41,25 +50,29 @@ function doProcessMessage(e) {
 			if (word !== undefined && word !== null && word != ""){
 				word = word.trim();
 				if (word === wordOfDay){
-					count++;
+					// doesn't count if word of day is at last and the last character is not a space
+					if (!(i === arrWords.length-1  && msg[msg.length-1] !== '')){
+						count++;
+					}
 				}
 			}
 		}
 
 		if (count > 0){
 		   	Ti.Media.vibrate({ pattern: [0,500,100,500,100,500] });
-			//alert("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
+			  Ti.API.trace("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
 		} else {
-			//alert("Word of day '" + wordOfDay + "' is not found in your message.");
+			  Ti.API.trace("Word of day '" + wordOfDay + "' is not found in your message.");
 		}
 		if (g_iOS){
 			$.tab1.badge = count;
 		} else {
-			$.tab1.title = "Count word of the day: " + count;
+			$.tab1.title = "Word of the day count: " + count;
 		}
 	}
 }
 
+// retreive word of day
 function getWordOfDay() {
 	
 	var msgDate = undefined;
@@ -72,7 +85,7 @@ function getWordOfDay() {
 	if (msgDate !== undefined && msgDate !== "" && wordOfDay !== undefined && wordOfDay !== ""){
 		try{
 			var d = new Date(msgDate);
-			//alert("d = " + d);
+			  Ti.API.trace("d = " + d);
 			if (d !== undefined && d.getYear() === today.getYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate() ){
 				// return saved word of day.
 				return wordOfDay;
@@ -91,10 +104,10 @@ function getWordOfDay() {
 	xhr1.send(null);
 	
 	if (xhr1.status === 200) {
-		//alert("xhr1.responseText: " + xhr1.responseText);
+		  Ti.API.trace("xhr1.responseText: " + xhr1.responseText);
 		var json = JSON.parse(xhr1.responseText);
 		if (json.word === undefined) {
-			//alert('Unable to get word of the day.');
+			  Ti.API.trace('Unable to get word of the day.');
 			return null;
 		}
 
@@ -104,19 +117,20 @@ function getWordOfDay() {
 		
 		return wordOfDay;
 	} else {
-		//Ti.API.error(xhr1.status);
+		Ti.API.trace('Unable to get word of the day: ' + xhr1.status);
 	}
 	
 	return null;
 }
 
+// init values
 function initValues() {
-	//alert(Ti.App.Properties.getString("UserMessage"));
+  	Ti.API.trace(Ti.App.Properties.getString("UserMessage"));
 	$.txtMessage.value = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
 }
 
 $.index.open();
 initValues();
-doProcessMessage(null);
+doProcessMessage();
 
 
