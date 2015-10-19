@@ -5,10 +5,13 @@
 		<Window id="MainWindow" class="container">
 			<TableView >
 				<TableViewRow>
+					<Label id="lblWordOfDay" width="250" ></Label>
+				</TableViewRow>
+				<TableViewRow>
 					<Label id="label" width="250">Enter a message: </Label>
 				</TableViewRow>
 				<TableViewRow>
-					<TextField id="txtMessage" width="250" onKeypressed="processKeyPressed"></TextField>
+					<TextField id="txtMessage" width="250" onKeypressed="processKeyPressed" color="blue" borderColor="brown"></TextField>
 				</TableViewRow>
 				<TableViewRow left="true">
 					<Button onClick="doProcessMessage">Process Message</Button>
