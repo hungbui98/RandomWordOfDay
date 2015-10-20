@@ -6,20 +6,11 @@ var g_mobileweb = Ti.Platform.name === "mobileweb";
 var g_wsURL = 'http://api.wordnik.com:80/v4/words.json/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
 var g_userMessage = undefined;
 var g_gettingWord = false;
+var g_wordOfDay = null;
+var g_wordCount = 0;
 
 Ti.API.trace("Ti.Platform.name=" + Ti.Platform.name);
 	
-//----------------------------------
-// sleep function
-//----------------------------------
-function sleep(milliseconds) {
-    var start = new Date().getTime();
-
-    while((new Date().getTime() - start) < milliseconds) {
-        // Do nothing
-    }
-}
-
 //----------------------------------
 // key pressed event handler
 //----------------------------------
@@ -36,9 +27,8 @@ function processKeyPressed(e){
 
 //----------------------------------
 // process user message
-// ignoreWS: don't try to get word from web service 
 //----------------------------------
-function doProcessMessage(e, ignoreWS) {
+function doProcessMessage(e) {
 	
 	 //alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
 	
@@ -63,7 +53,10 @@ function doProcessMessage(e, ignoreWS) {
 		// process word of the day
 		arrWords = msg.split(' ');
 		
-		var wordOfDay = g_mobileweb ?  getWordOfDay1() : getWordOfDay(ignoreWS);
+		if (!g_mobileweb){
+			getWordOfDay();
+		}
+		var wordOfDay = g_mobileweb ?  getWordOfDay1() : g_wordOfDay;
 		$.lblWordOfDay.text = "Word of Day: " + wordOfDay;
 		//alert("wordOfDay=" + wordOfDay);
 		
@@ -88,7 +81,7 @@ function doProcessMessage(e, ignoreWS) {
 			}
 		}
 
-		if (count > 0){
+		if (count != g_wordCount){
 		   	Ti.Media.vibrate({ pattern: [0,500,100,500,100,500] });
 			  Ti.API.trace("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
 		} else {
@@ -99,13 +92,15 @@ function doProcessMessage(e, ignoreWS) {
 		} else {
 			$.tab1.title = "Word of the day count: " + count;
 		}
+		
+		g_wordCount = count;
 	}
 }
 
 //----------------------------------
 // get word of day in android or iOS.
 //----------------------------------
-function getWordOfDay(ignoreWS){ 
+function getWordOfDay(){ 
 	
 	var msgDate = undefined;
 	var wordOfDay = undefined;
@@ -129,62 +124,51 @@ function getWordOfDay(ignoreWS){
 	}
 	
 	// get word of day from web service.
-	if (!g_gettingWord && (ignoreWS === undefined || ignoreWS === false)){
+	if (!g_gettingWord){
 		
-	var g_wordOfDay;
-	var g_xhr = Titanium.Network.createHTTPClient();
-	g_xhr.timeout = 5000;
-	
-	g_xhr.onload = function(e) {
-		g_gettingWord = false;
-		alert("this.responseText = '" + this.responseText + "'; ");
-	    // this is where you would process the returned object.
-	    if (this.responseText != null) {
+		//var g_wordOfDay;
+		var g_xhr = Titanium.Network.createHTTPClient();
+		g_xhr.timeout = 5000;
 		
-	        var jsObj = JSON.parse(this.responseText);
-	        // Do something with the object
-			if (jsObj.word === undefined || jsObj.word === null) {
-				  Ti.API.trace('Titanium not able to get word of the day.');
-				return null;
-			}
-			g_wordOfDaywordOfDay = jsObj.word.trim();
-			if (g_wordOfDaywordOfDay === undefined || g_wordOfDaywordOfDay === null) {
-				  Ti.API.trace('Titanium not able to get word of the day.');
-				return null;
-			}
-			if (g_wordOfDaywordOfDay === "") {
-				  Ti.API.trace('Word of the day is blank. That is invalid.');
-				return null;
-			}			
-			Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
-			Ti.App.Properties.setString('WordOfDay', g_wordOfDaywordOfDay);
-			doProcessMessage(undefined, true);
-	    } else {
-	       Ti.API.trace("Webservice returned nothing");
-	    }
-	};
-	 
-	g_xhr.onerror = function(e) {
-		g_gettingWord = false;
-	    // This is where you would catch any errors thrown from calling the webservice. 
-	    // e.error holds the error message
-	    alert("xhr ERROR: " + e.error);
-	    Ti.API.error("xhr ERROR: " + e.error);
-	};
+		g_xhr.onload = function(e) {
+			g_gettingWord = false;
+			//alert("this.responseText = '" + this.responseText + "'; ");
+		    // this is where you would process the returned object.
+		    if (this.responseText != null) {
+			
+		        var jsObj = JSON.parse(this.responseText);
+		        // Do something with the object
+				if (jsObj.word === undefined || jsObj.word === null) {
+					  Ti.API.trace('Titanium not able to get word of the day.');
+				}
+				g_wordOfDay = jsObj.word.trim();
+				if (g_wordOfDay === undefined || g_wordOfDay === null) {
+					  Ti.API.trace('Titanium not able to get word of the day.');
+				}
+				if (g_wordOfDay === "") {
+					  Ti.API.trace('Word of the day is blank. That is invalid.');
+				}			
+				Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
+				Ti.App.Properties.setString('WordOfDay', g_wordOfDay);
+		    } else {
+		       Ti.API.trace("Webservice returned nothing");
+		    }
+		};
+		 
+		g_xhr.onerror = function(e) {
+			g_gettingWord = false;
+		    // This is where you would catch any errors thrown from calling the webservice. 
+		    // e.error holds the error message
+		    alert("xhr ERROR: " + e.error);
+		    Ti.API.error("xhr ERROR: " + e.error);
+		};
 	
 		g_xhr.open('GET', g_wsURL);
 		g_xhr.setRequestHeader('Content-Type', "application/json; charset=utf-8");
 		g_gettingWord = true;
 		g_xhr.send();
 	}
-	else {
-		setTimeout(getWordOfDay, 1000);
-	}
-	/*
-	var i = 0;
-	while (i++ < 50 && g_gettingWord){
-		sleep(100);
-	}*/
+
 	if (g_wordOfDay !== undefined && g_wordOfDay !== null){
 		Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
 		Ti.App.Properties.setString("WordOfDay", g_wordOfDay);
@@ -258,6 +242,6 @@ function initValues() {
 //----------------------------------
 $.index.open();
 initValues();
-doProcessMessage();
+setInterval(doProcessMessage, 1000);
 
 
