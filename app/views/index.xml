@@ -1,22 +1,17 @@
 <Alloy>
 <TabGroup backgroundColor="white" >
-    <Tab id="tab1" title="Word of the day count" badge="0" backgroundColor="orange" icon="Modify-50.png">
+    <Tab id="tab1" title="Word of the day count" badge="0" backgroundColor="red" icon="Modify-50.png">
     	
 		<Window id="MainWindow" class="container">
-			<TableView >
-				<TableViewRow>
-					<Label id="lblWordOfDay" width="250" ></Label>
-				</TableViewRow>
-				<TableViewRow>
-					<Label id="label" width="250">Enter a message: </Label>
-				</TableViewRow>
-				<TableViewRow>
-					<TextField id="txtMessage" width="250" onKeypressed="processKeyPressed" color="blue" borderColor="brown"></TextField>
-				</TableViewRow>
+					<Label id="lblWordOfDay" width="250" top="5"></Label>
+					<Label id="label" width="250" top="30">Enter a message: </Label>
+<!--
 				<TableViewRow left="true">
 					<Button onClick="doProcessMessage">Process Message</Button>
 				</TableViewRow>
-			</TableView>
+-->
+			<TextArea id="txtMessage" width="250" height="180" onKeypressed="processKeyPressed" color="blue" borderColor="brown" borderWidth="1" 
+				tintColor="black" top="50" ></TextArea>
 	
 		</Window>
 

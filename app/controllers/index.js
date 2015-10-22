@@ -8,6 +8,7 @@ var g_userMessage = undefined;
 var g_gettingWord = false;
 var g_wordOfDay = null;
 var g_wordCount = 0;
+var g_dateOfWord = null;
 
 Ti.API.trace("Ti.Platform.name=" + Ti.Platform.name);
 	
@@ -21,7 +22,7 @@ function processKeyPressed(e){
 		Ti.App.Properties.setString('UserMessage', msg);
 	}
  	if (e.keyCode === KeyEvent.KEYCODE_SPACE || e.keyCode === KeyEvent.KEYCODE_FORWARD_DEL  || e.keyCode === KeyEvent.KEYCODE_DEL){
- 		doProcessMessage(e);
+ 		doProcessMessage();
  	}	
 }
 
@@ -30,25 +31,17 @@ function processKeyPressed(e){
 //----------------------------------
 function doProcessMessage(e) {
 	
-	 //alert("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
-	
+ 	 //Ti.API.trace("MessageDate=" + Ti.App.Properties.getString("MessageDate") + "; WordOfDay=" + Ti.App.Properties.getString("WordOfDay"));
+ 				
 	var msg = $.txtMessage.value;
 	
 	if (msg !== undefined) {
+		
+		// only show this message if user press the button 
 		if (e !== undefined && msg.length <= 0) {
 			alert("Error: Message can't be blank. Try again.");
 			return;
 		}
-/*
-		if (e !== undefined && msg === g_userMessage) {
-			alert("Please enter a new message.");
-			return;
-		}
-*/
-		
-		// save temp value.
-		g_userMessage = msg;
-		Ti.App.Properties.setString('UserMessage', msg);
 
 		// process word of the day
 		arrWords = msg.split(' ');
@@ -57,9 +50,15 @@ function doProcessMessage(e) {
 			getWordOfDay();
 		}
 		var wordOfDay = g_mobileweb ?  getWordOfDay1() : g_wordOfDay;
-		$.lblWordOfDay.text = "Word of Day: " + wordOfDay;
-		//alert("wordOfDay=" + wordOfDay);
+		$.lblWordOfDay.text = "Word of Day: " + (wordOfDay != null ? wordOfDay : "");
+		//Ti.API.trace("wordOfDay=" + wordOfDay);
 		
+		if (g_userMessage == msg) return;
+		
+		// save temp value.
+		g_userMessage = msg;
+		Ti.App.Properties.setString('UserMessage', msg);
+
 		if (wordOfDay === undefined || wordOfDay === null)
 		{
 			Ti.API.error('doProcessMessage(): Unable to get word of the day.');
@@ -73,20 +72,16 @@ function doProcessMessage(e) {
 			if (word !== undefined && word !== null && word != ""){
 				word = word.trim();
 				if (word === wordOfDay){
-					// doesn't count if word of day is at last and the last character is not a space
-					if (!(i === arrWords.length-1  && msg[msg.length-1] !== ' ')){
-						count++;
-					}
+					count++;
 				}
 			}
 		}
 
 		if (count != g_wordCount){
 		   	Ti.Media.vibrate({ pattern: [0,500,100,500,100,500] });
-			  Ti.API.trace("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
-		} else {
-			  Ti.API.trace("Word of day '" + wordOfDay + "' is not found in your message.");
+			Ti.API.trace("Word of day '" + wordOfDay + "' is found " + count + " times in your message.");
 		}
+
 		if (g_iOS){
 			$.tab1.badge = count;
 		} else {
@@ -106,16 +101,25 @@ function getWordOfDay(){
 	var wordOfDay = undefined;
 	var today = new Date();
 	
+	// return temp value if it is current.
+	if (g_wordOfDay !== null && g_dateOfWord != null && g_dateOfWord.getYear() === today.getYear() && g_dateOfWord.getMonth() === today.getMonth() && g_dateOfWord.getDate() === today.getDate()){
+		return g_wordOfDay;
+	}
+	
+	// get values from config file.
 	msgDate = Ti.App.Properties.getString("MessageDate");
 	wordOfDay = Ti.App.Properties.getString("WordOfDay");
-	
+
+ 	Ti.API.trace("MessageDate=" + msgDate + "; WordOfDay=" + wordOfDay);
+ 				
 	if (msgDate !== undefined && msgDate !== "" && wordOfDay !== undefined && wordOfDay !== ""){
 		try{
 			var d = new Date(msgDate);
 			  Ti.API.trace("d = " + d);
 			if (d !== undefined && d.getYear() === today.getYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate() ){
 				// return saved word of day.
-				return wordOfDay;
+				g_wordOfDay = wordOfDay;
+				return;
 			}
 		}
 		catch (e) {
@@ -126,14 +130,13 @@ function getWordOfDay(){
 	// get word of day from web service.
 	if (!g_gettingWord){
 		
-		//var g_wordOfDay;
 		var g_xhr = Titanium.Network.createHTTPClient();
-		g_xhr.timeout = 5000;
+		g_xhr.timeout = 500;
 		
 		g_xhr.onload = function(e) {
 			g_gettingWord = false;
 			//alert("this.responseText = '" + this.responseText + "'; ");
-		    // this is where you would process the returned object.
+		    
 		    if (this.responseText != null) {
 			
 		        var jsObj = JSON.parse(this.responseText);
@@ -142,12 +145,16 @@ function getWordOfDay(){
 					  Ti.API.trace('Titanium not able to get word of the day.');
 				}
 				g_wordOfDay = jsObj.word.trim();
+				g_dateOfWord = new Date();
+				
 				if (g_wordOfDay === undefined || g_wordOfDay === null) {
 					  Ti.API.trace('Titanium not able to get word of the day.');
 				}
 				if (g_wordOfDay === "") {
 					  Ti.API.trace('Word of the day is blank. That is invalid.');
-				}			
+				}
+				//alert(g_wordOfDay);
+							
 				Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
 				Ti.App.Properties.setString('WordOfDay', g_wordOfDay);
 		    } else {
@@ -169,11 +176,6 @@ function getWordOfDay(){
 		g_xhr.send();
 	}
 
-	if (g_wordOfDay !== undefined && g_wordOfDay !== null){
-		Ti.App.Properties.setString('MessageDate', today.toLocaleDateString());
-		Ti.App.Properties.setString("WordOfDay", g_wordOfDay);
-	}
-	return g_wordOfDay;
 }
 
 //----------------------------------
@@ -233,8 +235,10 @@ function getWordOfDay1() {
 // initialize values
 //----------------------------------
 function initValues() {
+
   	Ti.API.trace("UserMessage=" + Ti.App.Properties.getString("UserMessage"));
-	$.txtMessage.value = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
+	g_userMessage = Ti.App.Properties.getString("UserMessage") !== undefined ? Ti.App.Properties.getString("UserMessage") : "";
+	$.txtMessage.value = g_userMessage;
 }
 
 //----------------------------------
@@ -242,6 +246,6 @@ function initValues() {
 //----------------------------------
 $.index.open();
 initValues();
-setInterval(doProcessMessage, 1000);
+setInterval(doProcessMessage, 500);
 
 
